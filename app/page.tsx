@@ -1,84 +1,70 @@
-import Link from "next/link";
 
-const tools = [
-  { title: "AI Chat", text: "Ask questions, brainstorm ideas, and turn rough thoughts into clear results.", icon: "✦" },
-  { title: "Image Studio", text: "Create polished visual concepts from simple descriptions.", icon: "◈" },
-  { title: "Writing Lab", text: "Draft, rewrite, summarize, and improve content in seconds.", icon: "Aa" },
-  { title: "Code Assistant", text: "Build, explain, and debug projects with an AI coding partner.", icon: "</>" }
-];
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+
+export default function WritingLab() {
+  const [prompt, setPrompt] = useState('');
+  const [result, setResult] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async (e) => {
+    e.preventDefault();
+    if (!prompt.trim()) return;
+
+    setLoading(true);
+    setResult('');
+
+    try {
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (data.output) {
+        setResult(data.output);
+      } else {
+        setResult('Error: ' + (data.error || 'Failed to generate response.'));
+      }
+    } catch (err) {
+      setResult('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <main className="site-shell">
-      <nav className="nav">
-        <div className="brand">
-          <span className="brand-mark">✦</span>
-          <span>AI Studio</span>
-        </div>
-        <div className="nav-links">
-          <Link href="#tools">Tools</Link>
-          <Link href="#about">About</Link>
-          <a className="nav-button" href="#start">Get Started</a>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-black text-white p-6 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-2">Writing Lab</h1>
+      <p className="text-gray-400 mb-6">Draft, rewrite, and improve your content with AI.</p>
 
-      <section className="hero" id="start">
-        <div className="eyebrow">YOUR CREATIVE AI WORKSPACE</div>
-        <h1>Turn ideas into <span>something real.</span></h1>
-        <p className="hero-copy">
-          AI Studio brings powerful AI tools into one simple workspace — designed
-          to help you think, create, write, and build faster.
-        </p>
-        <div className="hero-actions">
-          <a className="primary-button" href="#tools">Explore AI Studio <span>→</span></a>
-          <a className="secondary-button" href="#about">See how it works</a>
-        </div>
-        <div className="hero-glow" />
-      </section>
+      <form onSubmit={handleGenerate} className="space-y-4">
+        <textarea
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Ask AI to write something (e.g. Write a song, summarize an article, edit a message)..."
+          rows={5}
+          className="w-full p-4 rounded-xl bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:border-white"
+        />
 
-      <section className="stats">
-        <div><strong>01</strong><span>One simple workspace</span></div>
-        <div><strong>04</strong><span>Creative AI tools</span></div>
-        <div><strong>∞</strong><span>Ideas to explore</span></div>
-      </section>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 px-6 rounded-xl bg-white text-black font-semibold hover:bg-gray-200 transition disabled:opacity-50"
+        >
+          {loading ? 'Generating...' : 'Generate Content'}
+        </button>
+      </form>
 
-      <section className="tools-section" id="tools">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">THE WORKSPACE</div>
-            <h2>Everything you need to create.</h2>
-          </div>
-          <p>Start with an idea. AI Studio helps you take it from there.</p>
+      {result && (
+        <div className="mt-8 p-6 rounded-xl bg-gray-900 border border-gray-800">
+          <h2 className="text-lg font-semibold mb-3 text-gray-300">AI Response:</h2>
+          <div className="whitespace-pre-wrap text-gray-200 leading-relaxed">{result}</div>
         </div>
-        <div className="tool-grid">
-          {tools.map((tool) => (
-            <article className="tool-card" key={tool.title}>
-              <div className="tool-icon">{tool.icon}</div>
-              <h3>{tool.title}</h3>
-              <p>{tool.text}</p>
-              <a href="#start">Open tool <span>↗</span></a>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="about" id="about">
-        <div className="about-card">
-          <div className="eyebrow">BUILT FOR YOU</div>
-          <h2>Simple on the surface. Powerful underneath.</h2>
-          <p>
-            This first version gives AI Studio a professional foundation. We can
-            connect the real AI features, accounts, data, and APIs after the
-            website is live.
-          </p>
-          <a className="primary-button" href="#tools">Start exploring <span>→</span></a>
-        </div>
-      </section>
-
-      <footer>
-        <div className="brand"><span className="brand-mark">✦</span><span>AI Studio</span></div>
-        <span>Built to turn ideas into reality.</span>
-      </footer>
-    </main>
+      )}
+    </div>
   );
 }
